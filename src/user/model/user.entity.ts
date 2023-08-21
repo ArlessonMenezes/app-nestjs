@@ -21,6 +21,9 @@ export class User {
   @Column({ nullable: true })
   typeUser: string;
 
+  @Column({ default: 'ativo' })
+  status: string;
+
   @Column({ nullable: true })
   date_inactivation: Date;
 

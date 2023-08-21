@@ -1,12 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { User } from './model/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { hash } from 'bcrypt';
+import { hash, hashSync } from 'bcrypt';
 import { TypeUserEnum } from './enum/type-user.enum';
+import { StatusUserEnum } from './enum/status-user.enum';
 
 @Injectable()
 export class UserService {
@@ -24,25 +25,33 @@ export class UserService {
       throw new BadRequestException('User already exists in database.'); 
     };
 
-    const hashedPassword = await hash(createUserDto.password, 10);
+    const hashedPassword = hashSync(createUserDto.password, 10);
 
     const newUser = this.userRepository.create({
       name: createUserDto.name,
       email: createUserDto.email,
       password: hashedPassword,
       typeUser: TypeUserEnum.Customer,
+      status: StatusUserEnum.Ativo,
     });
 
     await this.userRepository.save(newUser);
 
-    const { created_at, updatet_at, password, ...userReturn } = newUser;
+    const {
+      created_at, updatet_at, password, 
+      date_inactivation, ...userReturn
+    } = newUser;
 
     return userReturn;
   }
 
   async getusers() {
     return this.userRepository.find({
-      select: ['idUser', 'name', 'email', 'avatar', 'typeUser'],
+      select: [
+        'idUser', 'name', 'email',
+        'avatar', 'typeUser', 'status',
+        'date_inactivation',
+      ],
     });
   }
 
@@ -78,6 +87,32 @@ export class UserService {
     await this.userRepository.remove(user);
 
     return { success: 'User deleted.' };
+  }
 
+  async inactivateUser(idUser: number) {
+    const user = this.userRepository.findOne({
+      where: { idUser },
+    });
+
+    if (!user) throw new NotFoundException('User not found.');
+
+    await this.userRepository.update(idUser, {
+      date_inactivation: new Date(),
+      status: 'inativo',
+    });
+
+    const returnEdit = {
+      user: {
+        name: (await user).name,
+        email: (await user).email,
+        id: (await user).idUser,
+      },
+      message: 'Inactivated user',
+    }
+
+    return {
+      user: returnEdit.user,
+      msg: returnEdit.message,
+    };
   }
 }

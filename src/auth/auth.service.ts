@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { compare } from 'bcrypt';
+import { StatusUserEnum } from 'src/user/enum/status-user.enum';
 import { UserService } from 'src/user/user.service';
 
 import { LoginPayloadDto } from './dto/login-payload.dto';
 import { LoginDto } from './dto/login.dto';
+import { compare } from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -22,11 +23,14 @@ export class AuthService {
       throw new NotFoundException('E-mail or Password invalid');
     };
 
-    if (user?.date_inactivation !== null) {
+    if (user.date_inactivation !== null || user.status === StatusUserEnum.Inativo) {
       throw new BadRequestException('Inactive user.');
     }
 
-    const { created_at, password, updatet_at, avatar, ...userReturn } = user;
+    const {
+      created_at, password, updatet_at, 
+      avatar, date_inactivation, ...userReturn
+    } = user;
 
     return {
       user: userReturn,

@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, BadRequestException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { LoginPayloadDto } from 'src/auth/dto/login-payload.dto';
@@ -18,13 +18,16 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    
     if (!requiredRoles) {
       return true;
     }
 
     const { authorization } = context.switchToHttp().getRequest().headers;
-
+    
+    if (!authorization) {
+      throw new BadRequestException('Required a JWT Token.');
+    }
+    
     const loginPayload: LoginPayloadDto = 
       await this.jwtService.verifyAsync(authorization, {
          secret: process.env.JWT_SECRET
@@ -33,7 +36,6 @@ export class RolesGuard implements CanActivate {
     if (!loginPayload) {
       return false;
     };
-
     return requiredRoles.some((role) => role === loginPayload.typeUser);
   }
 }

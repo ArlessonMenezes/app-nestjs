@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -37,5 +37,11 @@ export class UserController {
   @Delete('/:name')
   async deleteUser(@Query('name') name: string) {
     return this.userService.deleteUser(name);
+  };
+
+  @Roles(TypeUserEnum.Admin)
+  @Delete('/:idUser/inactivate')
+  async inactivateUser(@Param('idUser', ParseIntPipe) idUser: number) {
+    return this.userService.inactivateUser(idUser);
   };
 }
