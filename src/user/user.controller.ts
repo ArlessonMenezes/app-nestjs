@@ -1,14 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, Res, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
-import { diskStorage } from 'multer';
-import * as path from 'path';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { Roles } from 'src/utils/decoratos/role.decorator';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { TypeUserEnum } from './enum/type-user.enum';
 import { UserService } from './user.service';
+import { idUser } from 'src/utils/decoratos/id-user.decorator';
 
 @Controller('user')
 export class UserController {
@@ -27,12 +24,13 @@ export class UserController {
     return this.userService.getusers();
   };
   
-  @Put('/:idUser/update')
+  @Roles(TypeUserEnum.Admin, TypeUserEnum.Customer)
+  @Put('/update')
   async updateUser(
-    @Param('idUser', ParseIntPipe) idUSer: number,
+    @idUser('idUser') idUser: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateUser(idUSer, updateUserDto);
+    return this.userService.updateUser(idUser, updateUserDto);
   };
 
   @Get('/:name')
