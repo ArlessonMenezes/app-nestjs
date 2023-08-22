@@ -36,6 +36,7 @@ export class RolesGuard implements CanActivate {
     if (!loginPayload) {
       return false;
     };
+    
     return requiredRoles.some((role) => role === loginPayload.typeUser);
   }
 }

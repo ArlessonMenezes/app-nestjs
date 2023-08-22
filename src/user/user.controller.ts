@@ -1,11 +1,14 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, Res, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
+import { diskStorage } from 'multer';
+import * as path from 'path';
+import { Roles } from 'src/utils/decoratos/role.decorator';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserService } from './user.service';
-import { Roles } from 'src/utils/decoratos/role.decorator';
 import { TypeUserEnum } from './enum/type-user.enum';
-import { RolesGuard } from 'src/guard/roles.guard';
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
@@ -24,9 +27,12 @@ export class UserController {
     return this.userService.getusers();
   };
   
-  @Put('/:name')
-  async updateUser(@Body() updateUserDto: UpdateUserDto) {
-    return this.userService.updateUser(updateUserDto);
+  @Put('/:idUser/update')
+  async updateUser(
+    @Param('idUser', ParseIntPipe) idUSer: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.updateUser(idUSer, updateUserDto);
   };
 
   @Get('/:name')
@@ -45,3 +51,4 @@ export class UserController {
     return this.userService.inactivateUser(idUser);
   };
 }
+ 

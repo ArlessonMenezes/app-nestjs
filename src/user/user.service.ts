@@ -27,12 +27,18 @@ export class UserService {
 
     const hashedPassword = hashSync(createUserDto.password, 10);
 
+    const [dd, mm, yyyy] = createUserDto.dateOfBirth.split('/'); 
+    
+    const dateOfBirth = new Date(yyyy + '/' + mm + '/' + dd);
+   
     const newUser = this.userRepository.create({
       name: createUserDto.name,
       email: createUserDto.email,
+      dateOfBirth,
       password: hashedPassword,
       typeUser: TypeUserEnum.Customer,
       status: StatusUserEnum.Ativo,
+      avatar: createUserDto.avatar,
     });
 
     await this.userRepository.save(newUser);
@@ -73,10 +79,29 @@ export class UserService {
     return user;
   }
 
-  async updateUser(updateUserDto: UpdateUserDto) {
-    const product = await this.findUserByEmail(updateUserDto.email);
+  async findUserById(idUser: number) {
+    const user = await this.userRepository.findOne({
+      where: { idUser },
+    });
 
-    await this.userRepository.update(product.idUser, { ...updateUserDto });
+    if (!user) throw new NotFoundException('User not found.');
+
+    return user;
+  }
+
+  async updateUser(idUser: number, updateUserDto: UpdateUserDto) {
+    const user = await this.findUserById(idUser);
+
+    const [dd, mm, yyyy] = updateUserDto.dateOfBirth.split('/');
+
+    const dateOfBirth = new Date(yyyy + '/' + mm + '/' + dd);
+
+    await this.userRepository.update(idUser, {dateOfBirth});
+
+    await this.userRepository.save({
+      idUser,
+      ...updateUserDto,
+    });
 
     return { success: 'User updated.' };
   }
@@ -95,6 +120,10 @@ export class UserService {
     });
 
     if (!user) throw new NotFoundException('User not found.');
+
+    if ((await user).status === StatusUserEnum.Inativo) {
+      throw new BadRequestException('User already inactivate.');
+    };
 
     await this.userRepository.update(idUser, {
       date_inactivation: new Date(),

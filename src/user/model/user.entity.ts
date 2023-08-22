@@ -1,5 +1,4 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { TypeUserEnum } from '../enum/type-user.enum';
 
 @Entity()
 export class User {
@@ -12,13 +11,16 @@ export class User {
   @Column()
   email: string;
 
+  @Column({ name: 'date_of_birth', nullable: true})
+  dateOfBirth: Date;
+
   @Column()
   password: string;
 
   @Column({ nullable: true })
   avatar: string;
 
-  @Column({ nullable: true })
+  @Column()
   typeUser: string;
 
   @Column({ default: 'ativo' })
